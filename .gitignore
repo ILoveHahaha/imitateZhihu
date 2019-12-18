@@ -1,0 +1,5 @@
+node_modules
+logs
+./public/UnifiedReporting/pc/css
+./public/UnifiedReporting/pc/js
+.idea

@@ -1,0 +1,25 @@
+{
+  "name": "studykoa",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "cross-env NODE_ENV=production node app/index.js",
+    "dev": "nodemon app/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "koa": "^2.11.0",
+    "koa-bodyparser": "^4.2.1",
+    "koa-json-error": "^3.1.2",
+    "koa-router": "^7.4.0",
+    "mongoose": "^5.8.1"
+  },
+  "devDependencies": {
+    "cross-env": "^6.0.3",
+    "koa-parameter": "^3.0.1",
+    "nodemon": "^2.0.2"
+  }
+}
