@@ -1,30 +1,14 @@
+const jsonwebtoken = require('jsonwebtoken');
+// const jwt = require('koa-jwt');
 const User = require('../models/users.js');
-
-const db = [{name: 'hahaha'}];
-
-function test (ctx, cb) {
-    for (let a in db) {
-        if (db[a] && db[a].name === ctx.params.id) {
-            if (cb) {
-                cb(a);
-                return ctx.params
-            }
-            return db[a]
-        }
-    }
-    return []
-}
+const {secret} = require('../config.js');
 
 class Users {
     async find(ctx){
-        // ctx.body = db.filter(value => {
-        //     return value
-        // });
         ctx.body = await User.find();
     }
     async findById(ctx){
         // ctx.throw(ctx.response.status, '没有找到指定用户') // 错误返回自定义文本demo
-        // ctx.body = test(ctx)
         const user = await User.findById(ctx.params.id);
         if (!user) {
             ctx.throw(404, '用户不存在');
@@ -33,34 +17,50 @@ class Users {
     }
     async createById(ctx){
         ctx.verifyParams({
-            name: {type: 'string', required: true}
+            name: {type: 'string', required: true},
+            password: {type: 'string', required: true}
         });
-        // db.push(ctx.request.body);
-        // ctx.body = ctx.request.body
+        const {name} = ctx.request.body;
+        const repeatedUser = await User.findOne({name});
+        if (repeatedUser) {
+            ctx.throw(409, '用户已经存在') // 409状态表示冲突
+        }
         ctx.body = await new User(ctx.request.body).save();
     }
     async updateById(ctx){
         ctx.verifyParams({
-            name: {type: 'string', required: true}
+            name: {type: 'string', required: false},
+            password: {type: 'string', required: false}
         });
-        // ctx.body = test(ctx, function (param) {
-        //     db[param].name = ctx.request.body.name
-        // })
         const user = await User.findByIdAndUpdate(ctx.params.id, ctx.request.body);
+        // const user = await User.findByIdAndUpdate(ctx.params.id, ctx.request.body, (err) => {
+        //     if (err) ctx.throw(404, err.message);
+        // });
         if (!user) {
             ctx.throw(404, '用户不存在');
         }
         ctx.body = user;
     }
     async deleteById(ctx){
-        // test(ctx, function (param) {
-        //     delete db[param]
-        // });
         const user = await User.findByIdAndRemove(ctx.params.id);
         if (!user) {
             ctx.throw(404, '用户不存在');
         }
         ctx.status = 204
+    }
+    async login(ctx){
+        ctx.verifyParams({
+            name: {type: 'string', required: true},
+            password: {type: 'string', required: true}
+        });
+        const user = await User.findOne(ctx.request.body);
+        if (!user) {
+            ctx.throw(401, '用户名或密码不正确')
+        }
+        const {_id, name} = user;
+        // 设置需要返回的内容，签名密码和token过期时间
+        const token = jsonwebtoken.sign({_id, name}, secret, {expiresIn: '1d'});
+        ctx.body = {token}
     }
 }
 
