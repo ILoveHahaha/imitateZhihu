@@ -25,7 +25,7 @@ const checkOwner = async (ctx, next) => {
         ctx.throw(403, '没有权限')
     }
     await next()
-}
+};
 
 router.get('/', users.find);
 

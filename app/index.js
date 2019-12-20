@@ -1,10 +1,13 @@
 const Koa = require('koa');
-const bodyParser = require('koa-bodyparser'); // 请求体响应
+// const bodyParser = require('koa-bodyparser'); // 请求体响应，只支持JSON和form，不支持客户端发送的文件等
+const koaBody = require('koa-body'); // 比上面的koa-bodyparser更强大，支持各种各样的请求
 const koaJsonError = require('koa-json-error'); // 错误状态码捕获处理中间件
 const parameter = require('koa-parameter'); // 校验参数中间件
 const mongoose = require('mongoose'); // 连接云数据库mongoDB插件
+const koaStatic = require('koa-static'); // 静态文件生成链接
+const path = require('path');
 const app = new Koa();
-const {connectionStr} = require('./config')
+const {connectionStr} = require('./config');
 const routing = require('./routes');
 
 mongoose.connect(connectionStr, {
@@ -29,22 +32,19 @@ mongoose.connection.on('error', console.error);
 //     }
 // });
 
-// function test (err) {
-//     return {
-//         status: err.status,
-//         message: err.message,
-//         success: false,
-//         reason: 'Unexpected',
-//         desc: err
-//     }
-// }
-// app.use(koaJsonError(test));
+app.use(koaStatic(path.join(__dirname, 'public')));
 app.use(koaJsonError({
     postFormat: (e, {stack, ...rest}) => {
         return process.env.NODE_ENV === 'production' ? rest: {stack, ...rest}
     }
 }));
-app.use(bodyParser());
+app.use(koaBody({
+    multipart: true,
+    formidable: {
+        uploadDir: path.join(__dirname, '/public/uploadFiles'), // 设置上传目录
+        keepExtensions: true // 保留扩展名
+    }
+}));
 app.use(parameter(app));
 routing(app);
 

@@ -1,5 +1,5 @@
 1.operation of mongoDB.
 2.what is the JWT, and which is the way to better use it.
 3.MPC in koa.
-4.node中可以用jsonwebtoken来使用JWT
+4.node中可以用jsonwebtoken和jwt插件来使用JWT
 5.koa中间件详细了解
