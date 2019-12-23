@@ -39,5 +39,13 @@ router.delete('/:id', auth, checkOwner, users.deleteById);
 
 router.post('/login', users.login);
 
+router.get('/:id/following', users.listFollowing);
+
+router.put('/following/:id', auth, users.checkUserExist, users.follow);
+
+router.delete('/following/:id', auth, users.checkUserExist, users.unfollow);
+
+router.get('/:id/followers', users.listFollower);
+
 // app.use(router.allowedMethods());
 module.exports = router;
