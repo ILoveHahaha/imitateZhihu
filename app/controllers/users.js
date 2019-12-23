@@ -9,7 +9,13 @@ class Users {
     }
     async findById(ctx){
         // ctx.throw(ctx.response.status, '没有找到指定用户') // 错误返回自定义文本demo
-        const user = await User.findById(ctx.params.id);
+        // 通过传入的fields字段来获取要展示额外的数据
+        const {fields} = ctx.query;
+        const selectFields = fields.split(';')
+            .filter(value => value)
+            .map(value => {return ' +' + value})
+            .join('');
+        const user = await User.findById(ctx.params.id).select(selectFields);
         if (!user) {
             ctx.throw(404, '用户不存在');
         }
@@ -30,7 +36,14 @@ class Users {
     async updateById(ctx){
         ctx.verifyParams({
             name: {type: 'string', required: false},
-            password: {type: 'string', required: false}
+            password: {type: 'string', required: false},
+            avatar_url: {type: 'string', required: false},
+            gender: {type: 'string', required: false},
+            headline: {type: 'string', required: false},
+            locations: {type: 'array', itemType: 'string', required: false},
+            business: {type: 'string', required: false},
+            employments: {type: 'array', itemType: 'object', required: false},
+            educations: {type: 'array', itemType: 'object', required: false}
         });
         const user = await User.findByIdAndUpdate(ctx.params.id, ctx.request.body);
         // const user = await User.findByIdAndUpdate(ctx.params.id, ctx.request.body, (err) => {
