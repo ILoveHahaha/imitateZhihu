@@ -67,7 +67,7 @@ class Users extends commonFunc{
     async findById(ctx){
         // ctx.throw(ctx.response.status, '没有找到指定用户') // 错误返回自定义文本demo
         // 通过传入的fields字段来获取要展示额外的数据
-        const {fields} = ctx.query;
+        const {fields = ''} = ctx.query;
         const selectFields = fields.split(';')
             .filter(value => value)
             .map(value => {return ' +' + value})
@@ -176,10 +176,7 @@ class Users extends commonFunc{
     }
     // 检测用户是否存在
     async checkUserExist (ctx, next) {
-        // TODO: 遗漏bug
-        console.log(ctx)
         const user = await User.findById(ctx.params.id);
-        console.log(user, 'asfd')
         if (!user) {
             ctx.throw(404, '用户不存在')
         }

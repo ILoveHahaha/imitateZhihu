@@ -4,6 +4,7 @@ const Router = require('koa-router'); // koa路由中间件
 const router = new Router({prefix: '/users'});
 const users = require('../controllers/users');
 const {secret} = require('../config');
+const mongoose = require('mongoose');
 
 // 用户认证(注释的是用jsonwebtoken)
 // const auth = async (ctx, next) => {
@@ -27,25 +28,35 @@ const checkOwner = async (ctx, next) => {
     await next()
 };
 
+// 检查id是否合法
+const checkIdVaild = async (ctx, next) => {
+    if (mongoose.Types.ObjectId.isValid(ctx.params.id)) {
+        await next()
+    }
+    else {
+        ctx.throw(400, '传入的id是非法的')
+    }
+};
+
 router.get('/', users.find);
 
 router.post('/', users.createById);
 
-router.get('/:id', users.findById);
+router.get('/:id', checkIdVaild, users.findById);
 
-router.patch('/:id', auth, checkOwner, users.updateById);
+router.patch('/:id', checkIdVaild, auth, checkOwner, users.updateById);
 
-router.delete('/:id', auth, checkOwner, users.deleteById);
+router.delete('/:id', checkIdVaild, auth, checkOwner, users.deleteById);
 
 router.post('/login', users.login);
 
-router.get('/:id/following', users.listFollowing);
+router.get('/:id/following', checkIdVaild, users.listFollowing);
 
-router.put('/following/:id', auth, users.checkUserExist, users.follow);
+router.put('/following/:id', checkIdVaild, auth, users.checkUserExist, users.follow);
 
-router.delete('/following/:id', auth, users.checkUserExist, users.unfollow);
+router.delete('/following/:id', checkIdVaild, auth, users.checkUserExist, users.unfollow);
 
-router.get('/:id/followers', users.listFollower);
+router.get('/:id/followers', checkIdVaild, users.listFollower);
 
 // app.use(router.allowedMethods());
 module.exports = router;
