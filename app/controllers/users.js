@@ -142,32 +142,20 @@ class Users extends commonFunc{
             me.following.push(ctx.params.id);
             me.save();
         }
-        // else {
-        //     let errStatus = true;
-        //     console.log(me.following);
-        //     for (let a in me.following) {
-        //         if (me.following[a].toString() === ctx.params.id) {
-        //             errStatus = false;
-        //             if (a !== me.following.length - 1) {
-        //                 me.following[a] = me.following[me.following.length - 1]
-        //             }
-        //             me.following.length--
-        //         }
-        //     }
-        //     console.log(me.following);
-        //     if (errStatus) {
-        //         ctx.throw(500, '关注用户接口逻辑异常')
-        //     }
-        // }
         ctx.status = 204
     }
-    // TODO: splice方法是性能不好的方法
     async unfollow(ctx) {
         const me = await User.findById(ctx.state.user._id).select('+following');
-        const index = me.following.map(id => id.toString()).indexOf(ctx.params.id);
-        if (index > -1) {
-            me.following.splice(index, 1);
-            me.save();
+        for (let a = 0; a < me.following.length; a++) {
+            if (me.following[a].toString() === ctx.params.id) {
+                if (a !== me.following.length - 1) {
+                    me.following[a] = me.following[0]
+                }
+                let [firstIndex, ...restArr] = me.following;
+                me.following = restArr;
+                me.save();
+                break
+            }
         }
         ctx.status = 204
     }
