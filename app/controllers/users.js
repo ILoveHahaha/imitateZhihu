@@ -62,7 +62,10 @@ class commonFunc {
 
 class Users extends commonFunc{
     async find(ctx){
-        ctx.body = await User.find();
+        const per_page = ctx.query.per_page || 10;
+        const page = Math.max(Number(ctx.query.page), 1) - 1; // 最少一页
+        const perPage = Math.max(Number(per_page), 1); // 每页最少一项
+        ctx.body = await User.find().limit(perPage).skip(page * perPage); // limit表示只返回x项，skip表示跳过前面x项
     }
     async findById(ctx){
         // ctx.throw(ctx.response.status, '没有找到指定用户') // 错误返回自定义文本demo
