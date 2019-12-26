@@ -58,5 +58,11 @@ router.delete('/following/:id', checkIdVaild, auth, users.checkUserExist, users.
 
 router.get('/:id/followers', checkIdVaild, users.listFollower);
 
+router.put('/followingTopics/:id', checkIdVaild, auth, users.checkTopicExist, users.followTopic);
+
+router.delete('/followingTopics/:id', checkIdVaild, auth, users.checkTopicExist, users.unfollowTopic);
+
+router.get('/:id/followingTopics', checkIdVaild, users.listFollowerTopics);
+
 // app.use(router.allowedMethods());
 module.exports = router;

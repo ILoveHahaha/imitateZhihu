@@ -31,6 +31,10 @@ const userSchema = new Schema({
     following: {
         type: [{type: Schema.Types.ObjectId, ref: 'User'}], // 获取用户id，ref表示和User这个schema关联，在controller层用populate与之对应获取用户信息
         select: false
+    },
+    followingTopics: {
+        type: [{type: Schema.Types.ObjectId, ref: 'Topic'}],
+        select: false
     }
 });
 

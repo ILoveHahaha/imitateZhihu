@@ -29,8 +29,10 @@ router.get('/', topic.findTopicList);
 
 router.post('/', auth, topic.createTopic);
 
-router.get('/:id', checkIdVaild, topic.findTopicById);
+router.get('/:id', checkIdVaild, topic.checkTopicExist, topic.findTopicById);
 
-router.patch('/:id', checkIdVaild, auth, topic.updateTopic);
+router.patch('/:id', checkIdVaild, auth, topic.checkTopicExist, topic.updateTopic);
+
+router.get('/:id/followers', checkIdVaild, topic.checkTopicExist, topic.listTopicFollower);
 
 module.exports = router;

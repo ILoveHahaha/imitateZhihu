@@ -1,6 +1,7 @@
 const jsonwebtoken = require('jsonwebtoken');
 // const jwt = require('koa-jwt');
 const User = require('../models/users.js');
+const Topic = require('../models/topics.js');
 const {secret} = require('../config.js');
 
 // 公共函数
@@ -146,7 +147,7 @@ class Users extends commonFunc{
     async listFollowing(ctx) {
         const user = await User.findById(ctx.params.id).select('+following').populate('following');
         if (!user) {
-            ctx.throw(404)
+            ctx.throw(404, '用户不存在')
         }
         ctx.body = user.following;
     }
@@ -176,11 +177,49 @@ class Users extends commonFunc{
     async listFollower(ctx) {
         ctx.body = await User.find({following: ctx.params.id})
     }
+    async followTopic(ctx) {
+        const me = await User.findById(ctx.state.user._id).select('+followingTopics');
+        if (!me.followingTopics.map(id => id.toString()).includes(ctx.params.id)) {
+            me.followingTopics.push(ctx.params.id);
+            me.save();
+        }
+        ctx.status = 204
+    }
+    async unfollowTopic(ctx) {
+        const me = await User.findById(ctx.state.user._id).select('+followingTopics');
+        for (let a = 0; a < me.followingTopics.length; a++) {
+            if (me.followingTopics[a].toString() === ctx.params.id) {
+                if (a !== me.followingTopics.length - 1) {
+                    me.followingTopics[a] = me.followingTopics[0]
+                }
+                let [firstIndex, ...restArr] = me.followingTopics;
+                me.followingTopics = restArr;
+                me.save();
+                break
+            }
+        }
+        ctx.status = 204
+    }
+    async listFollowerTopics(ctx) {
+        const user = await User.findById(ctx.params.id).select('+followingTopics').populate('followingTopics');
+        if (!user) {
+            ctx.throw(404, '用户不存在')
+        }
+        ctx.body = user.followingTopics;
+    }
     // 检测用户是否存在
-    async checkUserExist (ctx, next) {
+    async checkUserExist(ctx, next) {
         const user = await User.findById(ctx.params.id);
         if (!user) {
             ctx.throw(404, '用户不存在')
+        }
+        await next();
+    }
+    // 检测话题是否存在
+    async checkTopicExist (ctx, next) {
+        const topic = await Topic.findById(ctx.params.id);
+        if (!topic) {
+            ctx.throw(404, '话题不存在')
         }
         await next();
     }
