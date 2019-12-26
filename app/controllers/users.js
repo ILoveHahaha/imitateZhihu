@@ -65,17 +65,28 @@ class Users extends commonFunc{
         const per_page = ctx.query.per_page || 10;
         const page = Math.max(Number(ctx.query.page), 1) - 1; // 最少一页
         const perPage = Math.max(Number(per_page), 1); // 每页最少一项
-        ctx.body = await User.find().limit(perPage).skip(page * perPage); // limit表示只返回x项，skip表示跳过前面x项
+        ctx.body = await User
+            .find({name: new RegExp(ctx.query.q)})
+            .limit(perPage)
+            .skip(page * perPage); // limit表示只返回x项，skip表示跳过前面x项
     }
     async findById(ctx){
         // ctx.throw(ctx.response.status, '没有找到指定用户') // 错误返回自定义文本demo
         // 通过传入的fields字段来获取要展示额外的数据
         const {fields = ''} = ctx.query;
-        const selectFields = fields.split(';')
-            .filter(value => value)
-            .map(value => {return ' +' + value})
-            .join('');
-        const user = await User.findById(ctx.params.id).select(selectFields);
+        const selectFields = fields.split(';').filter(value => value).map(value => {return ' +' + value}).join('');
+        const populateStr = fields.split(';').filter(value => value).map(value => {
+            if (value === 'employments') {
+                return 'employments.company employments.job'
+            }
+            if (value === 'educations') {
+                return 'educations.school educations.major'
+            }
+            return value
+        }).join(' ');
+        const user = await User.findById(ctx.params.id)
+            .select(selectFields)
+            .populate(populateStr);
         if (!user) {
             ctx.throw(404, '用户不存在');
         }

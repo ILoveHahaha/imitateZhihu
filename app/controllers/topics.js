@@ -4,11 +4,15 @@ const {secret} = require('../config');
 
 class TopicCtrl {
     //TODO: 分页应该要返回总数
+    //TODO: 这里的模糊搜索太简单
     async findTopicList(ctx) {
         const per_page = ctx.query.per_page || 10;
         const page = Math.max(Number(ctx.query.page), 1) - 1; // 最少一页
         const perPage = Math.max(Number(per_page), 1); // 每页最少一项
-        ctx.body = await Topic.find().limit(perPage).skip(page * perPage); // limit表示只返回x项，skip表示跳过前面x项
+        ctx.body = await Topic
+            .find({name: new RegExp(ctx.query.q)}) // 模糊搜索，搜索关于name的信息
+            .limit(perPage)
+            .skip(page * perPage); // limit表示只返回x项，skip表示跳过前面x项
     }
     async findTopicById(ctx) {
         const {fields = ''} = ctx.query;
