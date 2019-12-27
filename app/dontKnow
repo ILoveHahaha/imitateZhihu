@@ -4,3 +4,4 @@
 4.node中可以用jsonwebtoken和jwt插件来使用JWT
 5.koa中间件详细了解
 6.mongoose里findById需要传入一个合法（符合格式）的id，如果传入一个非法的id则会被mongoose捕获并报500的错
+7.restful风格
