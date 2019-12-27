@@ -310,6 +310,37 @@ class Users extends commonFunc{
         }
         ctx.status = 204
     }
+
+    async listCollectingAnswer(ctx) {
+        const user = await User.findById(ctx.params.id).select('+collectingAnswers').populate('collectingAnswers');
+        if (!user) {ctx.throw(404, '用户不存在')}
+        ctx.body = user.collectingAnswers;
+    }
+
+    async collectAnswer(ctx) {
+        const me = await User.findById(ctx.state.user._id).select('+collectingAnswers');
+        if (!me.collectingAnswers.map(value => value.toString()).includes(ctx.params.id)) {
+            me.collectingAnswers.push(ctx.params.id);
+            me.save();
+        }
+        ctx.status = 204;
+    }
+
+    async unCollectAnswer(ctx) {
+        const me = await User.findById(ctx.state.user._id).select('+collectingAnswers');
+        for (let a = 0; a < me.collectingAnswers.length; a++) {
+            if (me.collectingAnswers[a].toString() === ctx.params.id) {
+                if (a !== me.collectingAnswers.length - 1) {
+                    me.collectingAnswers[a] = me.collectingAnswers[0]
+                }
+                let [firstIndex, ...restArr] = me.collectingAnswers;
+                me.collectingAnswers = restArr;
+                me.save();
+                break
+            }
+        }
+        ctx.status = 204
+    }
 }
 
 module.exports = new Users();

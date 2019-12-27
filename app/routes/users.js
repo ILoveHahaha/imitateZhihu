@@ -79,5 +79,11 @@ router.put('/dislikingAnswers/:id', checkIdVaild, auth, checkAnswerExist, users.
 
 router.delete('/dislikingAnswers/:id', checkIdVaild, auth, checkAnswerExist, users.undislikeAnswer);
 
+router.get('/:id/collectingAnswer', checkIdVaild, users.listCollectingAnswer);
+
+router.put('/collectingAnswer/:id', checkIdVaild, auth, checkAnswerExist, users.collectAnswer);
+
+router.delete('/collectingAnswer/:id', checkIdVaild, auth, checkAnswerExist, users.unCollectAnswer);
+
 // app.use(router.allowedMethods());
 module.exports = router;
