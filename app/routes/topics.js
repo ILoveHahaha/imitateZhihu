@@ -35,4 +35,6 @@ router.patch('/:id', checkIdVaild, auth, topic.checkTopicExist, topic.updateTopi
 
 router.get('/:id/followers', checkIdVaild, topic.checkTopicExist, topic.listTopicFollower);
 
+router.get('/:id/questions', topic.checkTopicExist, topic.listQuestions);
+
 module.exports = router;

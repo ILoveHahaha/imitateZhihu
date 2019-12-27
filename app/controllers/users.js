@@ -2,6 +2,7 @@ const jsonwebtoken = require('jsonwebtoken');
 // const jwt = require('koa-jwt');
 const User = require('../models/users.js');
 const Topic = require('../models/topics.js');
+const Question = require('../models/questions');
 const {secret} = require('../config.js');
 
 // 公共函数
@@ -222,6 +223,9 @@ class Users extends commonFunc{
             ctx.throw(404, '话题不存在')
         }
         await next();
+    }
+    async listQuestions(ctx) {
+        ctx.body = await Question.find({questioner: ctx.params.id})
     }
 }
 

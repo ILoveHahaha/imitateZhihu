@@ -1,7 +1,6 @@
-const jsonwebtoken = require('jsonwebtoken');
 const Topic = require('../models/topics');
 const User = require('../models/users');
-const {secret} = require('../config');
+const Question = require('../models/questions');
 
 class TopicCtrl {
     //TODO: 分页应该要返回总数
@@ -38,6 +37,9 @@ class TopicCtrl {
     }
     async listTopicFollower(ctx) {
         ctx.body = await User.find({followingTopics: ctx.params.id})
+    }
+    async listQuestions(ctx) {
+        ctx.body  = await Question.find({topics: ctx.params.id})
     }
     // 检测话题是否存在
     async checkTopicExist (ctx, next) {

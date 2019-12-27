@@ -64,5 +64,7 @@ router.delete('/followingTopics/:id', checkIdVaild, auth, users.checkTopicExist,
 
 router.get('/:id/followingTopics', checkIdVaild, users.listFollowerTopics);
 
+router.get('/:id/questions', users.listQuestions);
+
 // app.use(router.allowedMethods());
 module.exports = router;
