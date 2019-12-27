@@ -42,7 +42,7 @@ class AnswerCtrl {
         if (!answer) {
             ctx.throw(404, '答案不存在')
         }
-        if (answer.questionId !== ctx.params.questionId) {
+        if (ctx.params.questionId && answer.questionId !== ctx.params.questionId) {
             ctx.throw(404, '该答案不在此问题下')
         }
         ctx.state.answer = answer;

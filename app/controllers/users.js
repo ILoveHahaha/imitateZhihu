@@ -3,6 +3,7 @@ const jsonwebtoken = require('jsonwebtoken');
 const User = require('../models/users.js');
 const Topic = require('../models/topics.js');
 const Question = require('../models/questions');
+const Answer = require('../models/answers');
 const {secret} = require('../config.js');
 
 // 公共函数
@@ -72,6 +73,7 @@ class Users extends commonFunc{
             .limit(perPage)
             .skip(page * perPage); // limit表示只返回x项，skip表示跳过前面x项
     }
+
     async findById(ctx){
         // ctx.throw(ctx.response.status, '没有找到指定用户') // 错误返回自定义文本demo
         // 通过传入的fields字段来获取要展示额外的数据
@@ -94,6 +96,7 @@ class Users extends commonFunc{
         }
         ctx.body = user;
     }
+
     async createById(ctx){
         ctx.verifyParams({
             name: {type: 'string', required: true},
@@ -106,6 +109,7 @@ class Users extends commonFunc{
         }
         ctx.body = await new User(ctx.request.body).save();
     }
+
     async updateById(ctx){
         ctx.verifyParams({
             name: {type: 'string', required: false},
@@ -124,6 +128,7 @@ class Users extends commonFunc{
         }
         ctx.body = user;
     }
+
     async deleteById(ctx){
         const user = await User.findByIdAndRemove(ctx.params.id);
         if (!user) {
@@ -131,6 +136,7 @@ class Users extends commonFunc{
         }
         ctx.status = 204
     }
+
     async login(ctx){
         ctx.verifyParams({
             name: {type: 'string', required: true},
@@ -145,6 +151,7 @@ class Users extends commonFunc{
         const token = jsonwebtoken.sign({_id, name}, secret, {expiresIn: '1d'});
         ctx.body = {token}
     }
+
     async listFollowing(ctx) {
         const user = await User.findById(ctx.params.id).select('+following').populate('following');
         if (!user) {
@@ -152,6 +159,7 @@ class Users extends commonFunc{
         }
         ctx.body = user.following;
     }
+
     async follow(ctx) {
         const me = await User.findById(ctx.state.user._id).select('+following');
         if (!me.following.map(id => id.toString()).includes(ctx.params.id)) {
@@ -160,6 +168,7 @@ class Users extends commonFunc{
         }
         ctx.status = 204
     }
+
     async unfollow(ctx) {
         const me = await User.findById(ctx.state.user._id).select('+following');
         for (let a = 0; a < me.following.length; a++) {
@@ -175,9 +184,11 @@ class Users extends commonFunc{
         }
         ctx.status = 204
     }
+
     async listFollower(ctx) {
         ctx.body = await User.find({following: ctx.params.id})
     }
+
     async followTopic(ctx) {
         const me = await User.findById(ctx.state.user._id).select('+followingTopics');
         if (!me.followingTopics.map(id => id.toString()).includes(ctx.params.id)) {
@@ -186,6 +197,7 @@ class Users extends commonFunc{
         }
         ctx.status = 204
     }
+
     async unfollowTopic(ctx) {
         const me = await User.findById(ctx.state.user._id).select('+followingTopics');
         for (let a = 0; a < me.followingTopics.length; a++) {
@@ -201,6 +213,7 @@ class Users extends commonFunc{
         }
         ctx.status = 204
     }
+
     async listFollowerTopics(ctx) {
         const user = await User.findById(ctx.params.id).select('+followingTopics').populate('followingTopics');
         if (!user) {
@@ -208,6 +221,7 @@ class Users extends commonFunc{
         }
         ctx.body = user.followingTopics;
     }
+
     // 检测用户是否存在
     async checkUserExist(ctx, next) {
         const user = await User.findById(ctx.params.id);
@@ -216,6 +230,7 @@ class Users extends commonFunc{
         }
         await next();
     }
+
     // 检测话题是否存在
     async checkTopicExist (ctx, next) {
         const topic = await Topic.findById(ctx.params.id);
@@ -224,8 +239,76 @@ class Users extends commonFunc{
         }
         await next();
     }
+
     async listQuestions(ctx) {
         ctx.body = await Question.find({questioner: ctx.params.id})
+    }
+
+    async listLikingAnswers(ctx) {
+        const user = await User.findById(ctx.params.id).select('+likingAnswers').populate('likingAnswers');
+        if (!user) {ctx.throw(404, '用户不存在')}
+        ctx.body = user.likingAnswers;
+    }
+
+    // 点赞和踩是互斥事件
+    async likeAnswer(ctx, next) {
+        const me = await User.findById(ctx.state.user._id).select('+likingAnswers');
+        if (!me.likingAnswers.map(value => value.toString()).includes(ctx.params.id)) {
+            me.likingAnswers.push(ctx.params.id);
+            me.save();
+            await Answer.findByIdAndUpdate(ctx.params.id, {$inc: {voteCount: 1}}) // $inc表示的是增加
+        }
+        ctx.status = 204;
+        await next();
+    }
+
+    async unlikeAnswer(ctx) {
+        const me = await User.findById(ctx.state.user._id).select('+likingAnswers');
+        for (let a = 0; a < me.likingAnswers.length; a++) {
+            if (me.likingAnswers[a].toString() === ctx.params.id) {
+                if (a !== me.likingAnswers.length - 1) {
+                    me.likingAnswers[a] = me.likingAnswers[0]
+                }
+                let [firstIndex, ...restArr] = me.likingAnswers;
+                me.likingAnswers = restArr;
+                me.save();
+                await Answer.findByIdAndUpdate(ctx.params.id, {$inc: {voteCount: -1}});
+                break
+            }
+        }
+        ctx.status = 204
+    }
+
+    async listDisLikingAnswers(ctx) {
+        const user = await User.findById(ctx.params.id).select('+dislikingAnswers').populate('dislikingAnswers');
+        if (!user) {ctx.throw(404, '用户不存在')}
+        ctx.body = user.dislikingAnswers;
+    }
+
+    async dislikeAnswer(ctx, next) {
+        const me = await User.findById(ctx.state.user._id).select('+dislikingAnswers');
+        if (!me.dislikingAnswers.map(value => value.toString()).includes(ctx.params.id)) {
+            me.dislikingAnswers.push(ctx.params.id);
+            me.save();
+        }
+        ctx.status = 204;
+        await next();
+    }
+
+    async undislikeAnswer(ctx) {
+        const me = await User.findById(ctx.state.user._id).select('+dislikingAnswers');
+        for (let a = 0; a < me.dislikingAnswers.length; a++) {
+            if (me.dislikingAnswers[a].toString() === ctx.params.id) {
+                if (a !== me.dislikingAnswers.length - 1) {
+                    me.dislikingAnswers[a] = me.dislikingAnswers[0]
+                }
+                let [firstIndex, ...restArr] = me.dislikingAnswers;
+                me.dislikingAnswers = restArr;
+                me.save();
+                break
+            }
+        }
+        ctx.status = 204
     }
 }
 

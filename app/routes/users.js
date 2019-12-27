@@ -3,6 +3,7 @@ const jwt = require('koa-jwt'); // token的信息默认放到ctx.state.user中
 const Router = require('koa-router'); // koa路由中间件
 const router = new Router({prefix: '/users'});
 const users = require('../controllers/users');
+const {checkAnswerExist} = require('../controllers/answers');
 const {secret} = require('../config');
 const mongoose = require('mongoose');
 
@@ -65,6 +66,18 @@ router.delete('/followingTopics/:id', checkIdVaild, auth, users.checkTopicExist,
 router.get('/:id/followingTopics', checkIdVaild, users.listFollowerTopics);
 
 router.get('/:id/questions', users.listQuestions);
+
+router.get('/:id/likingAnswers', checkIdVaild, users.listLikingAnswers);
+
+router.put('/likingAnswers/:id', checkIdVaild, auth, checkAnswerExist, users.likeAnswer, users.undislikeAnswer);
+
+router.delete('/likingAnswers/:id', checkIdVaild, auth, checkAnswerExist, users.unlikeAnswer);
+
+router.get('/:id/dislikingAnswers', checkIdVaild, users.listDisLikingAnswers);
+
+router.put('/dislikingAnswers/:id', checkIdVaild, auth, checkAnswerExist, users.dislikeAnswer, users.unlikeAnswer);
+
+router.delete('/dislikingAnswers/:id', checkIdVaild, auth, checkAnswerExist, users.undislikeAnswer);
 
 // app.use(router.allowedMethods());
 module.exports = router;
